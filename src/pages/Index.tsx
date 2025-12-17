@@ -3,7 +3,8 @@ import Sidebar from "@/components/Sidebar";
 import ChatInterface from "@/components/ChatInterface";
 import AgentVisualizer, { AgentTask } from "@/components/AgentVisualizer";
 import { LogEntry, generateLogs } from "@/components/TerminalLog";
-import { DrugData } from "@/data/drugDatabase";
+import { DrugData, detectDrug, fallbackResponse } from "@/data/drugDatabase";
+import { config } from "@/config";
 
 interface Message {
   id: string;
@@ -131,7 +132,7 @@ const Index = () => {
       const systemMsg: Message = {
         id: `system-${Date.now()}`,
         type: "system",
-        content: `Master Agent: Analyzing query and initiating real-time research workflow...`,
+        content: `Master Agent: Initiating multi-agent research workflow...`,
       };
       setMessages((prev) => [...prev, systemMsg]);
 
@@ -157,11 +158,26 @@ const Index = () => {
           type: "request",
         });
 
-        const response = await fetch("http://127.0.0.1:5000/api/research", {
+        if (config.DEBUG_MODE) {
+          console.log(
+            `[PharmAgent] Connecting to backend: ${config.BACKEND_URL}/api/research`
+          );
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          config.BACKEND_TIMEOUT
+        );
+
+        const response = await fetch(`${config.BACKEND_URL}/api/research`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: userMessage }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(
@@ -295,27 +311,150 @@ const Index = () => {
         };
         setMessages((prev) => [...prev, finalMsg]);
       } catch (error) {
-        // Error handling
+        // FALLBACK TO MOCK DATA when backend is unavailable
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error occurred";
 
-        addLog({
-          id: "error",
-          timestamp: timestamp(),
-          message: `ERROR: ${errorMessage}`,
-          type: "error",
-        });
+        if (config.DEBUG_MODE) {
+          console.error("[PharmAgent] Backend error:", error);
+        }
 
-        setMasterStatus("Error");
+        if (config.AUTO_FALLBACK_TO_MOCK) {
+          // Auto-fallback enabled: use local database
+          addLog({
+            id: "error",
+            timestamp: timestamp(),
+            message: `Backend unavailable (${
+              errorMessage.includes("fetch")
+                ? "connection failed"
+                : errorMessage
+            })`,
+            type: "info",
+          });
 
-        const errorMsg: Message = {
-          id: `agent-${Date.now()}`,
-          type: "agent",
-          content: `⚠️ **Backend Connection Failed**\n\n${errorMessage}\n\n**Possible causes:**\n- Flask backend is not running\n- Backend is on different port\n- CORS issues\n\n**To fix:**\n1. Open a terminal\n2. Navigate to backend folder\n3. Run: \`pip install -r requirements.txt\`\n4. Run: \`python app.py\`\n5. Try your query again`,
-          isTyping: true,
-          showDownload: false,
-        };
-        setMessages((prev) => [...prev, errorMsg]);
+          addLog({
+            id: "fallback",
+            timestamp: timestamp(),
+            message: "✓ Auto-switching to local simulation mode",
+            type: "info",
+          });
+
+          // Try to detect drug from query
+          const detectedDrug = detectDrug(userMessage);
+
+          if (detectedDrug) {
+            // Use mock data
+            addLog({
+              id: "mock-detect",
+              timestamp: timestamp(),
+              message: `Drug detected: ${detectedDrug.name} (using local database)`,
+              type: "success",
+            });
+
+            setMasterStatus("Processing worker agents...");
+
+            const agentData = createAgentData(detectedDrug);
+
+            // Simulate agent processing with animations
+            for (let i = 0; i < agentData.length; i++) {
+              await new Promise((resolve) => setTimeout(resolve, 800));
+
+              const apiNames = [
+                "Local patent database",
+                "Local clinical trials database",
+                "Local market intelligence",
+              ];
+              addLog({
+                id: `connect-${i}`,
+                timestamp: timestamp(),
+                message: `Querying ${apiNames[i]}...`,
+                type: "request",
+              });
+
+              setAgents((prev) => [
+                ...prev,
+                {
+                  ...agentData[i],
+                  status: "running",
+                },
+              ]);
+
+              await new Promise((resolve) => setTimeout(resolve, 600));
+
+              addLog({
+                id: `success-${i}`,
+                timestamp: timestamp(),
+                message: `${agentData[i].name}: Data retrieved ✓`,
+                type: "success",
+              });
+
+              setAgents((prev) =>
+                prev.map((agent) =>
+                  agent.id === agentData[i].id
+                    ? { ...agent, status: "success" }
+                    : agent
+                )
+              );
+            }
+
+            // Synthesis
+            await new Promise((resolve) => setTimeout(resolve, 400));
+            setMasterStatus("Complete");
+            addLog({
+              id: "done",
+              timestamp: timestamp(),
+              message: "Analysis complete (local mode). Report ready.",
+              type: "success",
+            });
+
+            const finalMsg: Message = {
+              id: `agent-${Date.now()}`,
+              type: "agent",
+              content: detectedDrug.synthesis,
+              isTyping: true,
+              showDownload: true,
+              drugData: detectedDrug,
+            };
+            setMessages((prev) => [...prev, finalMsg]);
+          } else {
+            // No drug detected - show fallback message
+            setMasterStatus("Awaiting clarification");
+            addLog({
+              id: "no-match",
+              timestamp: timestamp(),
+              message: "No matching compound found in database",
+              type: "info",
+            });
+
+            const fallbackMsg: Message = {
+              id: `agent-${Date.now()}`,
+              type: "agent",
+              content: fallbackResponse.synthesis,
+              isTyping: true,
+              showDownload: false,
+            };
+            setMessages((prev) => [...prev, fallbackMsg]);
+          }
+        } else {
+          // Auto-fallback disabled: show error message
+          addLog({
+            id: "error-strict",
+            timestamp: timestamp(),
+            message: `ERROR: ${errorMessage}`,
+            type: "error",
+          });
+
+          setMasterStatus("Error");
+
+          const errorMsg: Message = {
+            id: `agent-${Date.now()}`,
+            type: "agent",
+            content: `⚠️ **Backend Connection Required**\n\n${errorMessage}\n\n**The backend is not running.**\n\nPharmAgent requires the Python Flask backend for real-time web research.\n\n**To start the backend:**\n1. Open a terminal\n2. Navigate to backend folder: \`cd backend\`\n3. Install dependencies: \`pip install -r requirements.txt\`\n4. Start server: \`python app.py\`\n5. Wait for "Running on http://127.0.0.1:5000"\n6. Try your query again\n\n**Alternative:** Enable auto-fallback in \`src/config.ts\` to use local simulation mode.`,
+            isTyping: true,
+            showDownload: false,
+          };
+          setMessages((prev) => [...prev, errorMsg]);
+        }
       }
 
       setIsProcessing(false);
