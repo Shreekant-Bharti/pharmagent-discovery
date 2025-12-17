@@ -1,73 +1,111 @@
-# Welcome to your Lovable project
+# PharmAgent - AI-Powered Drug Discovery Platform
 
-## Project info
+> Multi-agent AI system for pharmaceutical research and drug repurposing opportunities
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🎯 Overview
 
-## How can I edit this code?
+PharmAgent is an intelligent drug discovery platform that uses multi-agent AI to analyze:
 
-There are several ways of editing your application.
+- Patent landscapes and Freedom to Operate (FTO)
+- Clinical trial data and pipelines
+- Market intelligence and competition
+- Strategic repurposing opportunities
 
-**Use Lovable**
+## 🚀 Quick Start
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Option 1: Run with Real Backend (Live Web Search)
 
-Changes made via Lovable will be committed automatically to this repo.
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup.
 
-**Use your preferred IDE**
+**Terminal 1: Start Backend**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Terminal 2: Start Frontend**
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open: `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Option 2: Frontend Only (Mock Data)
 
-**Use GitHub Codespaces**
+If you just want to see the UI without the Python backend:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm install
+npm run dev
+```
 
-## What technologies are used for this project?
+## 📁 Project Structure
 
-This project is built with:
+```
+pharmagent-discovery/
+├── backend/              # Python Flask + LangGraph backend
+│   ├── app.py           # REST API server
+│   ├── agent_graph.py   # Multi-agent workflow
+│   └── requirements.txt # Python dependencies
+├── src/                 # React frontend
+│   ├── components/      # UI components
+│   ├── pages/          # Main pages
+│   └── data/           # Mock data (if not using backend)
+└── public/             # Static assets
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🛠️ Technologies
 
-## How can I deploy this project?
+### Frontend
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- **React** + **TypeScript** - UI framework
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
+- **shadcn/ui** - Component library
+- **Framer Motion** - Animations
 
-## Can I connect a custom domain to my Lovable project?
+### Backend
 
-Yes, you can!
+- **Flask** - Python web framework
+- **LangGraph** - Multi-agent orchestration
+- **LangChain** - AI framework
+- **DuckDuckGo Search** - Free web search (no API keys)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📖 Documentation
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [QUICKSTART.md](QUICKSTART.md) - Fast 2-step setup
+- [backend/README_BACKEND.md](backend/README_BACKEND.md) - Backend guide
+- [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md) - System architecture
+- [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md) - Full implementation details
+
+## 🎯 Features
+
+✅ **Multi-Agent System** - Specialized agents for different research tasks  
+✅ **Real-Time Search** - Live web searches via DuckDuckGo  
+✅ **Patent Analysis** - FTO and patent expiry tracking  
+✅ **Clinical Trials** - Pipeline and phase analysis  
+✅ **Market Intelligence** - Size, competition, CAGR  
+✅ **PDF Reports** - Download strategic summaries  
+✅ **Terminal Logs** - Real-time workflow visibility
+
+## 🧪 Example Queries
+
+- "Analyze Gefitinib for Glioblastoma"
+- "What about Metformin for diabetes?"
+- "Research Aspirin repurposing opportunities"
+
+## 🤝 Contributing
+
+Contributions welcome! Please read our contributing guidelines before submitting PRs.
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🎓 Built For
+
+PharmAgent Hackathon - Accelerating Drug Discovery with AI
