@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Plus, MessageSquare, Clock, Brain, ChevronRight, Beaker } from 'lucide-react';
+import { Plus, MessageSquare, Clock, Brain, ChevronRight, Beaker, Circle } from 'lucide-react';
 
 interface SidebarProps {
   onNewChat: () => void;
@@ -28,6 +28,17 @@ const Sidebar = ({ onNewChat }: SidebarProps) => {
             <h1 className="text-lg font-bold text-slate-800">PharmAgent</h1>
             <p className="text-xs text-muted-foreground">AI R&D Co-pilot</p>
           </div>
+        </div>
+      </div>
+
+      {/* System Status */}
+      <div className="px-5 py-3 border-b border-border">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Circle className="w-3 h-3 fill-success text-success" />
+            <div className="absolute inset-0 w-3 h-3 bg-success rounded-full animate-ping opacity-50" />
+          </div>
+          <span className="text-xs font-medium text-slate-600">System Status: Online</span>
         </div>
       </div>
 
