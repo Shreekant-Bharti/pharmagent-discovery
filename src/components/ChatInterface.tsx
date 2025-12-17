@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Beaker, FileText, Download, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import TypingEffect from './TypingEffect';
+import { DrugData } from '@/data/drugDatabase';
+import { generatePDF } from '@/utils/pdfGenerator';
 
 interface Message {
   id: string;
@@ -9,6 +12,7 @@ interface Message {
   content: string;
   isTyping?: boolean;
   showDownload?: boolean;
+  drugData?: DrugData;
 }
 
 interface ChatInterfaceProps {
@@ -65,7 +69,23 @@ const WelcomeScreen = () => (
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.6 }}
-      className="flex items-center gap-2 mt-8 text-xs text-muted-foreground"
+      className="mt-8 flex flex-wrap justify-center gap-2"
+    >
+      {['Gefitinib', 'Metformin', 'Aspirin'].map((drug, i) => (
+        <span
+          key={drug}
+          className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full"
+        >
+          Try: "{drug}"
+        </span>
+      ))}
+    </motion.div>
+
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.7 }}
+      className="flex items-center gap-2 mt-6 text-xs text-muted-foreground"
     >
       <Sparkles className="w-4 h-4 text-primary" />
       <span>Powered by Multi-Agent AI</span>
@@ -90,8 +110,10 @@ const ChatInterface = ({ messages, onSendMessage, isProcessing }: ChatInterfaceP
     }
   };
 
-  const handleDownload = () => {
-    alert('Downloading Strategy Report (PDF)...\n\nIn a production environment, this would generate a comprehensive PDF report with all analysis findings.');
+  const handleDownload = (drugData?: DrugData) => {
+    if (drugData) {
+      generatePDF(drugData);
+    }
   };
 
   return (
@@ -134,20 +156,37 @@ const ChatInterface = ({ messages, onSendMessage, isProcessing }: ChatInterfaceP
                         <Beaker className="w-4 h-4 text-primary" />
                       </div>
                       <div className="space-y-3">
-                        <div className="chat-bubble-agent">
+                        <div className="chat-bubble-agent prose prose-sm prose-slate max-w-none">
                           {message.isTyping ? (
-                            <TypingEffect text={message.content} speed={15} />
+                            <TypingEffect text={message.content} speed={10} />
                           ) : (
-                            <p className="text-sm leading-relaxed">{message.content}</p>
+                            <ReactMarkdown
+                              components={{
+                                strong: ({ children }) => (
+                                  <strong className="font-semibold text-slate-800">{children}</strong>
+                                ),
+                                ul: ({ children }) => (
+                                  <ul className="list-disc list-inside space-y-1 mt-2">{children}</ul>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="text-sm">{children}</li>
+                                ),
+                                p: ({ children }) => (
+                                  <p className="text-sm leading-relaxed mb-2 last:mb-0">{children}</p>
+                                ),
+                              }}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
                           )}
                         </div>
                         
-                        {message.showDownload && (
+                        {message.showDownload && message.drugData && (
                           <motion.button
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.5 }}
-                            onClick={handleDownload}
+                            onClick={() => handleDownload(message.drugData)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className="flex items-center gap-3 px-5 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl transition-all"
@@ -192,7 +231,7 @@ const ChatInterface = ({ messages, onSendMessage, isProcessing }: ChatInterfaceP
             </motion.button>
           </div>
           <p className="text-xs text-muted-foreground text-center mt-3">
-            PharmAgent analyzes patents, clinical trials, and market data to accelerate drug discovery
+            Try: "Analyze Gefitinib" • "What about Metformin?" • "Research Aspirin for cancer"
           </p>
         </form>
       </div>
